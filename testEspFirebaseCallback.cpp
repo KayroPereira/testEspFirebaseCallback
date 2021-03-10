@@ -4,43 +4,29 @@
 FirebaseData fbdo1;
 FirebaseData fbdo2;
 
-unsigned long sendDataPrevMillis = 0;
+unsigned long 	sendDataPrevMillis = 0,
+				delayButton = 0;
 
 //String path = "/Test/Stream";
 String path = "/count";
 
+uint8_t statusButtons[LENGTH_PATH_FIREBASE] = {0, 0};
+uint8_t pathButtonsTemp[LENGTH_PATH_FIREBASE] = {1, 1};
+
 uint16_t count = 0;
 
-void printResult(FirebaseData &data);
-void printResult(StreamData &data);
-
-void streamCallback(StreamData data) {
-
-	Serial.printf("\n-------------------------------------\n         Atualização Firebase            \n-------------------------------------\n");
-
-	Serial.println("Stream Data1 available...");
-	Serial.println("STREAM PATH: " + data.streamPath());
-	Serial.println("EVENT PATH: " + data.dataPath());
-	Serial.println("DATA TYPE: " + data.dataType());
-	Serial.println("EVENT TYPE: " + data.eventType());
-	Serial.print("VALUE: ");
-	printResult(data);
-	Serial.printf("\n-------------------------------------\n\n");
-}
-
-void streamTimeoutCallback(bool timeout) {
-	if (timeout) {
-		Serial.printf("\n\n-------------------------------------\n\n");
-		Serial.println("Stream timeout, resume streaming...");
-		Serial.printf("\n-------------------------------------\n\n");
-	}
-}
 
 void setup() {
 
-	Serial.begin(9600);
+	Serial.begin(57600);
 
-	pinMode(LED_8, OUTPUT);
+	pinMode(LED_2, OUTPUT);
+
+	for(uint8_t i = 0; i < LENGTH_PATH_FIREBASE; i++){
+		pinMode(PATH_LEDS[i], OUTPUT);
+		pinMode(PATH_BUTTONS[i], INPUT_PULLUP);
+		digitalWrite(PATH_LEDS[i], HIGH);
+	}
 
 	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 	Serial.print("Connecting to Wi-Fi");
@@ -77,22 +63,141 @@ void setup() {
 	}
 
 	Firebase.setStreamCallback(fbdo1, streamCallback, streamTimeoutCallback);
+
+	refreshFirebase();
+}
+
+
+bool pushButton(uint8_t button, uint8_t buttonOld){
+
+	if(button == 1 && pathButtonsTemp[buttonOld] == 0){
+		pathButtonsTemp[buttonOld] = 1;
+		return false;
+	}
+
+	if(button == 0 && pathButtonsTemp[buttonOld] == 1){
+		pathButtonsTemp[buttonOld] = 0;
+		return false;
+	}
+
+	if(button == 0 && pathButtonsTemp[buttonOld] == 0){
+		pathButtonsTemp[buttonOld] = 2;
+		return true;
+	}
+
+	if(button == 1 && pathButtonsTemp[buttonOld] == 2){
+		pathButtonsTemp[buttonOld] = 1;
+		return false;
+	}
+
+	return false;
+}
+
+void updatePin(uint8_t pin, uint8_t val){
+	digitalWrite(pin, val);
+}
+
+void updateOutput(uint8_t output){
+	updatePin(PATH_LEDS[output], !statusButtons[output]);
+}
+
+void printStatusButton(String name, uint8_t button, uint8_t buttonTemp, uint8_t buttonStatus){
+	Serial.printf("\n\n------------------------------------\nButton: %s\nStatus: %u \nStatusTemp: %u\nStatusLed: %u\n------------------------------------\n\n", &name, button, buttonTemp, buttonStatus);
+}
+
+bool updateFirebase(FirebaseData &fbdo, String path, FirebaseJson &json){
+
+	if (Firebase.updateNode(fbdo, path, json)) {
+		Serial.println("PASSED");
+		Serial.println("PATH: " + fbdo.dataPath());
+		Serial.println("TYPE: " + fbdo.dataType());
+		Serial.print("VALUE: ");
+		printResult(fbdo);
+		Serial.println("------------------------------------");
+		Serial.println();
+		return true;
+	} else {
+		Serial.println("FAILED");
+		Serial.println("REASON: " + fbdo.errorReason());
+		Serial.println("------------------------------------");
+		Serial.println();
+		return false;
+	}
+}
+
+void refreshFirebase(){
+	FirebaseJson json;
+
+	for(uint8_t i = 0; i < LENGTH_PATH_FIREBASE; i++){
+		json.set(PATH_FIREBASE[i], 0);
+	}
+
+	updateFirebase(fbdo2, path, json);
 }
 
 void loop() {
 
+	if(millis() - delayButton > 30){
+		FirebaseJson json;
+
+		uint8_t temp;
+		bool sendData = false;
+
+		delayButton = millis();
+
+		for(uint8_t inputAnalyze = 0; inputAnalyze < LENGTH_PATH_FIREBASE; inputAnalyze++){
+			temp = digitalRead(PATH_BUTTONS[inputAnalyze]);
+
+			if(pushButton(temp, inputAnalyze)){
+				statusButtons[inputAnalyze] = !statusButtons[inputAnalyze];
+				json.set(PATH_FIREBASE[inputAnalyze],(int) statusButtons[inputAnalyze]);
+				updateOutput(inputAnalyze);
+				printStatusButton(PATH_FIREBASE[inputAnalyze], temp, pathButtonsTemp[inputAnalyze], statusButtons[inputAnalyze]);
+				sendData = true;
+			}
+		}
+
+		if(sendData){
+//			updateFirebase(fbdo2, path, json);
+		}
+	}
+
 	if (millis() - sendDataPrevMillis > 15000) {
 
-		digitalWrite(LED_8, !digitalRead(LED_8));
+
+		digitalWrite(LED_2, !digitalRead(LED_2));
 
 		sendDataPrevMillis = millis();
 		count++;
 
+		FirebaseJson json;
+
 		Serial.println("------------------------------------");
 		Serial.println("Set JSON...");
 
-//		json.add("data", "hello").add("num", count);
-//		if (Firebase.setJSON(fbdo2, path + "/Json", json)) {
+		json.set("value", count);
+
+		updateFirebase(fbdo2, path, json);
+	}
+
+
+
+
+
+//		int temp;
+//
+//		for(uint8_t lengthData = 0; lengthData < LENGTH_PATH_FIREBASE; lengthData++){
+//			temp = digitalRead(PATH_BUTTONS[lengthData]);
+//
+//			if(pushButton(temp, lengthData)){
+//				json.set(PATH_FIREBASE[lengthData], temp);
+//				changerOutput(PATH_BUTTONS[lengthData], temp);
+//			}
+//			printStatusButton(PATH_FIREBASE[lengthData], temp, pathButtonsTemp[lengthData]);
+//		}
+
+
+//		if (Firebase.updateNode(fbdo2, path, json)) {
 //			Serial.println("PASSED");
 //			Serial.println("PATH: " + fbdo2.dataPath());
 //			Serial.println("TYPE: " + fbdo2.dataType());
@@ -106,28 +211,28 @@ void loop() {
 //			Serial.println("------------------------------------");
 //			Serial.println();
 //		}
+//	}
+}
 
-//		json.add("value", count);
+void streamCallback(StreamData data) {
 
-//		FirebaseJson updateData;
-		FirebaseJson json;
+	Serial.printf("\n-------------------------------------\n         Atualização Firebase            \n-------------------------------------\n");
 
-		json.set("value", count);
+	Serial.println("Stream Data1 available...");
+	Serial.println("STREAM PATH: " + data.streamPath());
+	Serial.println("EVENT PATH: " + data.dataPath());
+	Serial.println("DATA TYPE: " + data.dataType());
+	Serial.println("EVENT TYPE: " + data.eventType());
+	Serial.print("VALUE: ");
+	printResult(data);
+	Serial.printf("\n-------------------------------------\n\n");
+}
 
-		if (Firebase.updateNode(fbdo2, path, json)) {
-			Serial.println("PASSED");
-			Serial.println("PATH: " + fbdo2.dataPath());
-			Serial.println("TYPE: " + fbdo2.dataType());
-			Serial.print("VALUE: ");
-			printResult(fbdo2);
-			Serial.println("------------------------------------");
-			Serial.println();
-		} else {
-			Serial.println("FAILED");
-			Serial.println("REASON: " + fbdo2.errorReason());
-			Serial.println("------------------------------------");
-			Serial.println();
-		}
+void streamTimeoutCallback(bool timeout) {
+	if (timeout) {
+		Serial.printf("\n\n-------------------------------------\n\n");
+		Serial.println("Stream timeout, resume streaming...");
+		Serial.printf("\n-------------------------------------\n\n");
 	}
 }
 
@@ -145,25 +250,32 @@ void printResult(FirebaseData &data) {
 		Serial.println(data.stringData());
 	else if (data.dataType() == "json") {
 		Serial.println();
+
 		FirebaseJson &json = data.jsonObject();
 		//Print all object data
 		Serial.println("Pretty printed JSON data:");
+
 		String jsonStr;
+
 		json.toString(jsonStr, true);
+
 		Serial.println(jsonStr);
 		Serial.println();
 		Serial.println("Iterate JSON data:");
 		Serial.println();
+
 		size_t len = json.iteratorBegin();
 		String key, value = "";
+
 		int type = 0;
 		for (size_t i = 0; i < len; i++) {
 			json.iteratorGet(i, type, key, value);
+
 			Serial.print(i);
 			Serial.print(", ");
 			Serial.print("Type: ");
-			Serial.print(
-					type == FirebaseJson::JSON_OBJECT ? "object" : "array");
+			Serial.print(type == FirebaseJson::JSON_OBJECT ? "object" : "array");
+
 			if (type == FirebaseJson::JSON_OBJECT) {
 				Serial.print(", Key: ");
 				Serial.print(key);
@@ -174,21 +286,26 @@ void printResult(FirebaseData &data) {
 		json.iteratorEnd();
 	} else if (data.dataType() == "array") {
 		Serial.println();
+
 		//get array data from FirebaseData using FirebaseJsonArray object
 		FirebaseJsonArray &arr = data.jsonArray();
 		//Print all array values
+
 		Serial.println("Pretty printed Array:");
+
 		String arrStr;
 		arr.toString(arrStr, true);
 		Serial.println(arrStr);
 		Serial.println();
 		Serial.println("Iterate array values:");
 		Serial.println();
+
 		for (size_t i = 0; i < arr.size(); i++) {
 			Serial.print(i);
 			Serial.print(", Value: ");
 
 			FirebaseJsonData &jsonData = data.jsonData();
+
 			//Get the result data from FirebaseJsonArray object
 			arr.get(jsonData, i);
 			if (jsonData.typeNum == FirebaseJson::JSON_BOOL)
