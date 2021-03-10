@@ -16,7 +16,7 @@ void printResult(StreamData &data);
 
 void streamCallback(StreamData data) {
 
-	Serial.printf("\n-------------------------------------\n            Atualiização Firebase            \n-------------------------------------\n");
+	Serial.printf("\n-------------------------------------\n         Atualização Firebase            \n-------------------------------------\n");
 
 	Serial.println("Stream Data1 available...");
 	Serial.println("STREAM PATH: " + data.streamPath());
@@ -91,7 +91,6 @@ void loop() {
 		Serial.println("------------------------------------");
 		Serial.println("Set JSON...");
 
-		FirebaseJson json;
 //		json.add("data", "hello").add("num", count);
 //		if (Firebase.setJSON(fbdo2, path + "/Json", json)) {
 //			Serial.println("PASSED");
@@ -107,8 +106,15 @@ void loop() {
 //			Serial.println("------------------------------------");
 //			Serial.println();
 //		}
-		json.add("value", count);
-		if (Firebase.setJSON(fbdo2, path, json)) {
+
+//		json.add("value", count);
+
+//		FirebaseJson updateData;
+		FirebaseJson json;
+
+		json.set("value", count);
+
+		if (Firebase.updateNode(fbdo2, path, json)) {
 			Serial.println("PASSED");
 			Serial.println("PATH: " + fbdo2.dataPath());
 			Serial.println("TYPE: " + fbdo2.dataType());
