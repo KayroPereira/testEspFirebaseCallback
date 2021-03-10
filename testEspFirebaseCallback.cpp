@@ -4,8 +4,14 @@
 FirebaseData fbdo1;
 FirebaseData fbdo2;
 
+FirebaseJson jsonBuffer;
+
 unsigned long 	sendDataPrevMillis = 0,
-				delayButton = 0;
+				delayButton = 0,
+				delaySendFirebase = 0,
+				realTime = 0;
+
+bool sendDataFirebase = false;
 
 //String path = "/Test/Stream";
 String path = "/count";
@@ -135,13 +141,14 @@ void refreshFirebase(){
 	updateFirebase(fbdo2, path, json);
 }
 
+
 void loop() {
 
-	if(millis() - delayButton > 30){
-		FirebaseJson json;
+	realTime = millis();
+
+	if(realTime - delayButton > 30){
 
 		uint8_t temp;
-		bool sendData = false;
 
 		delayButton = millis();
 
@@ -150,19 +157,28 @@ void loop() {
 
 			if(pushButton(temp, inputAnalyze)){
 				statusButtons[inputAnalyze] = !statusButtons[inputAnalyze];
-				json.set(PATH_FIREBASE[inputAnalyze],(int) statusButtons[inputAnalyze]);
+				jsonBuffer.set(PATH_FIREBASE[inputAnalyze],(int) statusButtons[inputAnalyze]);
 				updateOutput(inputAnalyze);
 				printStatusButton(PATH_FIREBASE[inputAnalyze], temp, pathButtonsTemp[inputAnalyze], statusButtons[inputAnalyze]);
-				sendData = true;
+				sendDataFirebase = true;
 			}
-		}
-
-		if(sendData){
-//			updateFirebase(fbdo2, path, json);
 		}
 	}
 
-	if (millis() - sendDataPrevMillis > 15000) {
+	if(sendDataFirebase){
+		if(realTime - delaySendFirebase > 1000){
+
+			delaySendFirebase = millis();
+
+			if(updateFirebase(fbdo2, path, jsonBuffer)){
+				jsonBuffer.clear();
+
+				sendDataFirebase = false;
+			}
+		}
+	}
+
+	if (realTime - sendDataPrevMillis > 15000) {
 
 
 		digitalWrite(LED_2, !digitalRead(LED_2));
@@ -179,39 +195,6 @@ void loop() {
 
 		updateFirebase(fbdo2, path, json);
 	}
-
-
-
-
-
-//		int temp;
-//
-//		for(uint8_t lengthData = 0; lengthData < LENGTH_PATH_FIREBASE; lengthData++){
-//			temp = digitalRead(PATH_BUTTONS[lengthData]);
-//
-//			if(pushButton(temp, lengthData)){
-//				json.set(PATH_FIREBASE[lengthData], temp);
-//				changerOutput(PATH_BUTTONS[lengthData], temp);
-//			}
-//			printStatusButton(PATH_FIREBASE[lengthData], temp, pathButtonsTemp[lengthData]);
-//		}
-
-
-//		if (Firebase.updateNode(fbdo2, path, json)) {
-//			Serial.println("PASSED");
-//			Serial.println("PATH: " + fbdo2.dataPath());
-//			Serial.println("TYPE: " + fbdo2.dataType());
-//			Serial.print("VALUE: ");
-//			printResult(fbdo2);
-//			Serial.println("------------------------------------");
-//			Serial.println();
-//		} else {
-//			Serial.println("FAILED");
-//			Serial.println("REASON: " + fbdo2.errorReason());
-//			Serial.println("------------------------------------");
-//			Serial.println();
-//		}
-//	}
 }
 
 void streamCallback(StreamData data) {
