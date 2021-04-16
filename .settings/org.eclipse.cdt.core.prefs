@@ -1,3 +1,8 @@
+doxygen/doxygen_new_line_after_brief=true
+doxygen/doxygen_use_brief_tag=false
+doxygen/doxygen_use_javadoc_tags=true
+doxygen/doxygen_use_pre_tag=false
+doxygen/doxygen_use_structural_commands=false
 eclipse.preferences.version=1
 environment/project/io.sloeber.core.toolChain.release.853227233/A.ALT_SIZE_COMMAND/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.853227233/A.ALT_SIZE_COMMAND/operation=replace
@@ -73,7 +78,7 @@ environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.MCU/oper
 environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.MCU/value=esp8266
 environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PATH/value=C\:\\Kayro\\Desenvolvimento\\Eclipse\\WorkspaceEclipseEmbarcado\\testEspFirebaseCallback\\Release
+environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PATH/value=C\:\\Kayro\\Desenvolvimento\\Eclipse\\WorkspaceEmbarcado\\testEspFirebaseCallback\\Release
 environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PROJECT_NAME/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PROJECT_NAME/operation=replace
 environment/project/io.sloeber.core.toolChain.release.853227233/A.BUILD.PROJECT_NAME/value=${ProjName}
@@ -511,7 +516,7 @@ environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.COM_PORT/
 environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.COM_PORT/value=COM4
 environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.ECLIPSE_LOCATION/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.ECLIPSE_LOCATION/operation=replace
-environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.ECLIPSE_LOCATION/value=${eclipse_home}
+environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.ECLIPSE_LOCATION/value=C\:\\eclipse\\eclipse\\
 environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.EXTRA.ALL/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.EXTRA.ALL/operation=replace
 environment/project/io.sloeber.core.toolChain.release.853227233/JANTJE.EXTRA.ALL/value=

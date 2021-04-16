@@ -13,9 +13,6 @@ unsigned long 	sendDataPrevMillis = 0,
 
 bool sendDataFirebase = false;
 
-//String path = "/Test/Stream";
-String path = "/count";
-
 uint8_t statusButtons[LENGTH_PATH_FIREBASE] = {0, 0};
 uint8_t pathButtonsTemp[LENGTH_PATH_FIREBASE] = {1, 1};
 
@@ -60,7 +57,7 @@ void setup() {
 	//Set the size of HTTP response buffers in the case where we want to work with large data.
 	fbdo2.setResponseSize(1024);
 
-	if (!Firebase.beginStream(fbdo1, path)) {
+	if (!Firebase.beginStream(fbdo1, PATH_ROOT)) {
 		Serial.println("------------------------------------");
 		Serial.println("Can't begin stream connection...");
 		Serial.println("REASON: " + fbdo1.errorReason());
@@ -108,7 +105,7 @@ void updateOutput(uint8_t output){
 }
 
 void printStatusButton(String name, uint8_t button, uint8_t buttonTemp, uint8_t buttonStatus){
-	Serial.printf("\n\n------------------------------------\nButton: %s\nStatus: %u \nStatusTemp: %u\nStatusLed: %u\n------------------------------------\n\n", &name, button, buttonTemp, buttonStatus);
+	Serial.printf("\n\n------------------------------------\nButton: %s\nStatus: %u \nStatusTemp: %u\nStatusLed: %u\n------------------------------------\n\n", name.c_str(), button, buttonTemp, buttonStatus);
 }
 
 bool updateFirebase(FirebaseData &fbdo, String path, FirebaseJson &json){
@@ -135,10 +132,11 @@ void refreshFirebase(){
 	FirebaseJson json;
 
 	for(uint8_t i = 0; i < LENGTH_PATH_FIREBASE; i++){
-		json.set(PATH_FIREBASE[i], 0);
+//		json.set((const String) BTN_NO + "/" + PATH_FIREBASE[i] + "/value", 0);
+		json.add((const String) BTN_NO + "/" + PATH_FIREBASE[i] + "/value", 0);
 	}
 
-	updateFirebase(fbdo2, path, json);
+	updateFirebase(fbdo2, PATH_ROOT, json);
 }
 
 
@@ -157,9 +155,9 @@ void loop() {
 
 			if(pushButton(temp, inputAnalyze)){
 				statusButtons[inputAnalyze] = !statusButtons[inputAnalyze];
-				jsonBuffer.set(PATH_FIREBASE[inputAnalyze],(int) statusButtons[inputAnalyze]);
+				jsonBuffer.add((const String) BTN_NO + "/" + PATH_FIREBASE[inputAnalyze] + "/value",(int) statusButtons[inputAnalyze]);
 				updateOutput(inputAnalyze);
-				printStatusButton(PATH_FIREBASE[inputAnalyze], temp, pathButtonsTemp[inputAnalyze], statusButtons[inputAnalyze]);
+				printStatusButton((const String) BTN_NO + "/" + PATH_FIREBASE[inputAnalyze] + "/value", temp, pathButtonsTemp[inputAnalyze], statusButtons[inputAnalyze]);
 				sendDataFirebase = true;
 			}
 		}
@@ -170,7 +168,7 @@ void loop() {
 
 			delaySendFirebase = millis();
 
-			if(updateFirebase(fbdo2, path, jsonBuffer)){
+			if(updateFirebase(fbdo2, PATH_ROOT, jsonBuffer)){
 				jsonBuffer.clear();
 
 				sendDataFirebase = false;
@@ -193,7 +191,7 @@ void loop() {
 
 		json.set("value", count);
 
-		updateFirebase(fbdo2, path, json);
+		updateFirebase(fbdo2, PATH_ROOT, json);
 	}
 }
 

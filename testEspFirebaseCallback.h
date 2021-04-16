@@ -15,6 +15,10 @@
 	#define BUTTON_9		13			//GPIO13 -	D7
 	#define BUTTON_10		14			//GPIO14 -	D5
 
+	//TODO - Teste com multiplos nós
+	#define PATH_ROOT 	"/count_1"
+	#define BTN_NO		"/btn"
+
 	#define LENGTH_PATH_FIREBASE		2
 	const String PATH_FIREBASE[] = {"btn1", "btn2"};
 	const uint8_t PATH_LEDS[] = {OUT_8, OUT_11};
